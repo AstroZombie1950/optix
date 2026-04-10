@@ -564,7 +564,7 @@ section {
 
 /* BUTTON */
 .tariff-card__btn {
-    width: 150px;
+    width: 175px;
     margin-top: auto;
     align-self: center;
 
@@ -584,7 +584,7 @@ section {
     border-radius: 999px;
 }
 .tariff-card__btn-more {
-        width: 150px;
+    width: 175px;
     margin-top: auto;
     align-self: center;
 

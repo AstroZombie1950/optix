@@ -5,6 +5,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	exit;
 }
 
+/* Настройки бота — вставь свои */
+$botToken = '8776087593:AAEvmr3ZmPEAFvyCZN0KQV8--EXypuyKRfM';//<--------------------------- api
+$chatId   = '@test_channel_notifications';//<---------------------------------------------- channel
+
 /* Собираем и чистим данные */
 $name    = trim(strip_tags($_POST['name']    ?? ''));
 $email   = trim(strip_tags($_POST['email']   ?? ''));
@@ -18,39 +22,50 @@ if ($name === '' || $email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL))
 	exit;
 }
 
-/* Тема в зависимости от источника */
-$subjects = [
-	'akkaunt-hh'        => 'Заявка на аккаунт HH',
-	'udalit-otzyv-avito' => 'Заявка на удаление отзыва Авито',
+/* Заголовок в зависимости от источника */
+$titles = [
+	'akkaunt-hh'         => '🟡 Заявка на аккаунт HH',
+	'udalit-otzyv-avito' => '🟡 Заявка на удаление отзыва Авито',
 ];
-$subjectText = $subjects[$source] ?? 'Новая заявка с сайта';
+$title = $titles[$source] ?? '🟡 Новая заявка с сайта';
 
-/* Тело письма */
-$body  = "Новая заявка с сайта optixxx.ru\n";
-$body .= "Страница: /$source\n\n";
-$body .= "Имя:   $name\n";
-$body .= "Почта: $email\n";
+/* Текст сообщения */
+$text  = "$title\n";
+$text .= "━━━━━━━━━━━━━━━\n";
+$text .= "👤 Имя: $name\n";
+$text .= "📧 Почта: $email\n";
+$text .= "🌐 Страница: optixxx.ru/$source\n";
 
 if ($message !== '') {
-	$body .= "Сообщение:\n$message\n";
+	$text .= "💬 Сообщение: $message\n";
 }
 
-/* Параметры письма */
-$to      = 'safronovvan@gmail.com';//<----------------------------------------------почта
-$subject = '=?UTF-8?B?' . base64_encode($subjectText) . '?=';
+/* Отправка через Telegram Bot API */
+$url  = "https://api.telegram.org/bot$botToken/sendMessage";
+$data = [
+	'chat_id'    => $chatId,
+	'text'       => $text,
+	'parse_mode' => 'HTML',
+];
 
-$headers  = "From: no-reply@optixxx.ru\r\n";
-$headers .= "Reply-To: $email\r\n";
-$headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-
-/* Отправка */
-$sent = mail($to, $subject, $body, $headers);
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_POST,           true);
+curl_setopt($ch, CURLOPT_POSTFIELDS,     http_build_query($data));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT,        10);
+$response = curl_exec($ch);
+$curlErr  = curl_error($ch);
+curl_close($ch);
 
 header('Content-Type: application/json; charset=utf-8');
 
-if ($sent) {
-	echo json_encode(['success' => true,  'message' => 'Заявка отправлена.']);
+/* Разбираем ответ Telegram */
+$tgResult = json_decode($response, true);
+
+if ($tgResult && $tgResult['ok'] === true) {
+	echo json_encode(['success' => true, 'message' => 'Заявка отправлена.']);
 } else {
+	error_log('[send_mail.php] Telegram error: ' . $response . ' | curl: ' . $curlErr);
 	http_response_code(500);
 	echo json_encode(['success' => false, 'message' => 'Ошибка отправки. Попробуйте позже.']);
 }
