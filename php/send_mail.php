@@ -6,8 +6,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 /* Настройки бота — вставь свои */
-$botToken = '8776087593:AAEvmr3ZmPEAFvyCZN0KQV8--EXypuyKRfM';//<--------------------------- api
-$chatId   = '@test_channel_notifications';//<---------------------------------------------- channel
+$botToken = 'xxx';//<--------------------------- api
+$chatId   = 'xxx';//<----------------------------------------------------------- channel
 
 /* Собираем и чистим данные */
 $name    = trim(strip_tags($_POST['name']    ?? ''));
